@@ -101,4 +101,3 @@ export default function TradingChart({ ticker, tickerData, candles, isLoading })
   );
 }
 
-}

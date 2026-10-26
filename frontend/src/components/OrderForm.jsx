@@ -157,4 +157,3 @@ export default function OrderForm({ activeTicker, tickerData, balance, onOrderSu
   );
 }
 
-}

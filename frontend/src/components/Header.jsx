@@ -67,4 +67,3 @@ export default function Header({ tickers, activeTicker, onSelectTicker, balance,
   );
 }
 
-}
