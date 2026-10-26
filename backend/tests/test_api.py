@@ -72,14 +72,34 @@ async def test_insufficient_funds_rejected():
 @pytest.mark.asyncio
 async def test_reset_demo():
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        # Сначала сливаем $2,000
+        
         await client.post("/api/orders", json={"ticker": "SON", "side": "SELL", "amount": 2000.0})
         
-        # Сбрасываем счет
+        
         reset_res = await client.post("/api/reset")
         assert reset_res.status_code == 200
         
-        # Проверяем, что баланс вернулся на $10,000 и открытых сделок 0
+        
         port_res = await client.get("/api/portfolio")
         assert port_res.json()["balance"] == 10000.0
         assert len(port_res.json()["positions"]) == 0
+
+
+@pytest.mark.asyncio
+async def test_close_order_and_payout():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+       
+        res = await client.post("/api/orders", json={"ticker": "CHEB", "side": "BUY", "amount": 1000.0, "leverage": 1})
+        order_id = res.json()["id"]
+
+        
+        close_res = await client.post(f"/api/orders/{order_id}/close")
+        assert close_res.status_code == 200
+        assert close_res.json()["payout"] >= 1000.0
+
+        
+        port_res = await client.get("/api/portfolio")
+        assert port_res.json()["balance"] >= 10000.0
+        assert len(port_res.json()["positions"]) == 0
+
+

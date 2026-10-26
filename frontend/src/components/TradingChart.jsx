@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { createChart, ColorType } from 'lightweight-charts';
 
-export default function TradingChart({ ticker, tickerData, candles, isLoading }) {
+export default function TradingChart({ ticker, tickerData, candles, isLoading, onPriceUpdate }) {
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
   const seriesRef = useRef(null);
@@ -72,6 +72,39 @@ export default function TradingChart({ ticker, tickerData, candles, isLoading })
     }
   }, [candles]);
 
+  useEffect(() => {
+    if (!seriesRef.current || !candles || candles.length === 0) return;
+
+    const last = candles[candles.length - 1];
+    let currentCandle = {
+      time: Math.floor(new Date(last.time).getTime() / 1000),
+      open: last.open,
+      high: last.high,
+      low: last.low,
+      close: last.close,
+    };
+
+    const interval = setInterval(() => {
+      const volatility = currentCandle.close * 0.004;
+      const delta = (Math.random() - 0.49) * volatility;
+      const newClose = Math.max(0.5, +(currentCandle.close + delta).toFixed(2));
+      
+      currentCandle = {
+        ...currentCandle,
+        high: Math.max(currentCandle.high, newClose),
+        low: Math.min(currentCandle.low, newClose),
+        close: newClose,
+      };
+
+      seriesRef.current?.update(currentCandle);
+      if (onPriceUpdate) {
+        onPriceUpdate(newClose);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [candles, onPriceUpdate]);
+
   return (
     <div className="flex-1 flex flex-col bg-[#0d0e12] border border-zinc-800 rounded-lg overflow-hidden relative">
       <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-zinc-900/40">
@@ -85,7 +118,7 @@ export default function TradingChart({ ticker, tickerData, candles, isLoading })
         <div className="flex items-center gap-2 text-xs font-mono text-zinc-400">
           <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300">1M</span>
           <span className="text-zinc-600">|</span>
-          <span>Японские свечи</span>
+          <span>Японские свечи (LIVE)</span>
         </div>
       </div>
 
@@ -100,4 +133,3 @@ export default function TradingChart({ ticker, tickerData, candles, isLoading })
     </div>
   );
 }
-

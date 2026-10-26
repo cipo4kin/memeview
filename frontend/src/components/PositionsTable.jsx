@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function PositionsTable({ positions = [], tickers = {} }) {
+export default function PositionsTable({ positions = [], tickers = {}, onClosePosition }) {
   const priceMap = Array.isArray(tickers)
     ? tickers.reduce((acc, t) => ({ ...acc, [t.ticker]: t.price }), {})
     : {};
@@ -24,12 +24,13 @@ export default function PositionsTable({ positions = [], tickers = {} }) {
               <th className="py-2.5 px-4 font-normal">Вход</th>
               <th className="py-2.5 px-4 font-normal">Рынок</th>
               <th className="py-2.5 px-4 font-normal">PnL ($)</th>
+              <th className="py-2.5 px-4 font-normal text-right">Действие</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800/60 text-zinc-200">
             {positions.length === 0 ? (
               <tr>
-                <td colSpan="7" className="py-8 text-center text-zinc-500">
+                <td colSpan="8" className="py-8 text-center text-zinc-500">
                   Нет открытых позиций. Самое время зайти в Чебупиццу на всю котлету! 🚀
                 </td>
               </tr>
@@ -58,6 +59,14 @@ export default function PositionsTable({ positions = [], tickers = {} }) {
                     <td className={`py-2.5 px-4 font-bold ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
                       {isPositive ? '+' : ''}${pnl.toFixed(2)}
                     </td>
+                    <td className="py-2.5 px-4 text-right">
+                      <button
+                        onClick={() => onClosePosition(pos.id)}
+                        className="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-[11px] font-mono transition-colors border border-zinc-700 shadow-sm"
+                      >
+                        Закрыть
+                      </button>
+                    </td>
                   </tr>
                 );
               })
@@ -68,4 +77,3 @@ export default function PositionsTable({ positions = [], tickers = {} }) {
     </div>
   );
 }
-

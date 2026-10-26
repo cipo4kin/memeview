@@ -118,6 +118,36 @@ async def get_portfolio(db: AsyncSession = Depends(get_db)):
     result_orders = await db.execute(select(Order).order_by(Order.created_at.desc()))
     orders = result_orders.scalars().all()
     return PortfolioResponce(balance=round(account.balance, 2), positions=list(orders))
+@app.post("/api/orders/{order_id}/close")
+async def close_order(order_id: int, db: AsyncSession = Depends(get_db)):
+    """Закрытие позиции: расчет итогового PnL, возврат маржи с профитом на баланс"""
+    result_order = await db.execute(select(Order).where(Order.id == order_id))
+    order = result_order.scalar_one_or_none()
+    if not order:
+        raise HTTPException(status_code=404, detail="Сделка не найдена")
+
+    result_acc = await db.execute(select(Account).where(Account.id == 1))
+    account = result_acc.scalar_one_or_none()
+    if not account:
+        raise HTTPException(status_code=404, detail="Аккаунт не найден")
+
+    current_price = MARKET_TICKERS.get(order.ticker, {}).get("price", order.price)
+    price_diff = current_price - order.price if order.side == "BUY" else order.price - current_price
+    pnl = (price_diff / order.price) * order.amount * order.leverage
+    payout = max(0.0, order.amount + pnl)
+
+    account.balance += payout
+    await db.delete(order)
+    await db.commit()
+
+    return {
+        "message": f"Позиция по ${order.ticker} закрыта",
+        "pnl": round(pnl, 2),
+        "payout": round(payout, 2),
+        "balance": round(account.balance, 2),
+    }
+
+
 @app.post("/api/reset")
 async def reset_demo(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Account).where(Account.id == 1))

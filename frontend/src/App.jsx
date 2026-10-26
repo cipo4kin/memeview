@@ -3,7 +3,7 @@ import Header from './components/Header';
 import TradingChart from './components/TradingChart';
 import OrderForm from './components/OrderForm';
 import PositionsTable from './components/PositionsTable';
-import { fetchTickers, fetchChart, fetchPortfolio, createOrder, resetDemo } from './api';
+import { fetchTickers, fetchChart, fetchPortfolio, createOrder, closeOrder, resetDemo } from './api';
 
 export default function App() {
   const [tickers, setTickers] = useState([]);
@@ -53,9 +53,24 @@ export default function App() {
     }
   };
 
+  const handlePriceUpdate = (newPrice) => {
+    setTickers((prev) =>
+      prev.map((t) => (t.ticker === activeTicker ? { ...t, price: newPrice } : t))
+    );
+  };
+
   const handleOrderSubmit = async (orderData) => {
     await createOrder(orderData);
     await loadPortfolioData();
+  };
+
+  const handleClosePosition = async (orderId) => {
+    try {
+      await closeOrder(orderId);
+      await loadPortfolioData();
+    } catch (err) {
+      alert(err.message);
+    }
   };
 
   const handleReset = async () => {
@@ -88,6 +103,7 @@ export default function App() {
             tickerData={activeTickerData}
             candles={candles}
             isLoading={chartLoading}
+            onPriceUpdate={handlePriceUpdate}
           />
 
           <OrderForm
@@ -101,6 +117,7 @@ export default function App() {
         <PositionsTable
           positions={portfolio.positions}
           tickers={tickers}
+          onClosePosition={handleClosePosition}
         />
       </main>
 
@@ -110,4 +127,3 @@ export default function App() {
     </div>
   );
 }
-

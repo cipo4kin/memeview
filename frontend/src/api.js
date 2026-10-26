@@ -32,6 +32,12 @@ export async function createOrder(orderData) {
   return data;
 }
 
+export async function closeOrder(orderId) {
+  const res = await fetch(`${API_BASE}/orders/${orderId}/close`, { method: 'POST' });
+  if (!res.ok) throw new Error('Не удалось закрыть сделку');
+  return res.json();
+}
+
 export async function resetDemo() {
   const res = await fetch(`${API_BASE}/reset`, { method: 'POST' });
   if (!res.ok) throw new Error('Ошибка сброса счета');
