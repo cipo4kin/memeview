@@ -15,6 +15,12 @@ export default function App() {
   useEffect(() => {
     loadTickers();
     loadPortfolioData();
+
+    const interval = setInterval(() => {
+      loadTickers();
+    }, 2000);
+
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -51,12 +57,6 @@ export default function App() {
     } finally {
       setChartLoading(false);
     }
-  };
-
-  const handlePriceUpdate = (newPrice) => {
-    setTickers((prev) =>
-      prev.map((t) => (t.ticker === activeTicker ? { ...t, price: newPrice } : t))
-    );
   };
 
   const handleOrderSubmit = async (orderData) => {
@@ -103,7 +103,6 @@ export default function App() {
             tickerData={activeTickerData}
             candles={candles}
             isLoading={chartLoading}
-            onPriceUpdate={handlePriceUpdate}
           />
 
           <OrderForm

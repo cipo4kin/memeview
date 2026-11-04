@@ -8,7 +8,7 @@ class OrderCreate(BaseModel):
     amount: float = Field(..., gt=0, description="Сумма сделки в долларах должна быть больше 0")
     leverage: int = Field(default=1, ge=1, le=100, description="Плечо от 1 до 100")
 
-class OrderResponce(BaseModel):
+class OrderResponse(BaseModel):
     id: int
     ticker: str
     side: str
@@ -19,9 +19,9 @@ class OrderResponce(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-class PortfolioResponce(BaseModel):
+class PortfolioResponse(BaseModel):
     balance: float
-    positions: list[OrderResponce]
+    positions: list[OrderResponse]
 
 class TickerInfo(BaseModel):
     ticker: str

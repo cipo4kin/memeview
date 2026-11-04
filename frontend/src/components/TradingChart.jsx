@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { createChart, ColorType } from 'lightweight-charts';
 
-export default function TradingChart({ ticker, tickerData, candles, isLoading, onPriceUpdate }) {
+export default function TradingChart({ ticker, tickerData, candles, isLoading }) {
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
   const seriesRef = useRef(null);
@@ -72,38 +72,22 @@ export default function TradingChart({ ticker, tickerData, candles, isLoading, o
     }
   }, [candles]);
 
+ 
   useEffect(() => {
-    if (!seriesRef.current || !candles || candles.length === 0) return;
+    if (!seriesRef.current || !candles || candles.length === 0 || !tickerData?.price) return;
 
     const last = candles[candles.length - 1];
-    let currentCandle = {
-      time: Math.floor(new Date(last.time).getTime() / 1000),
+    const newPrice = tickerData.price;
+    const candleTime = Math.floor(new Date(last.time).getTime() / 1000);
+
+    seriesRef.current.update({
+      time: candleTime,
       open: last.open,
-      high: last.high,
-      low: last.low,
-      close: last.close,
-    };
-
-    const interval = setInterval(() => {
-      const volatility = currentCandle.close * 0.004;
-      const delta = (Math.random() - 0.49) * volatility;
-      const newClose = Math.max(0.5, +(currentCandle.close + delta).toFixed(2));
-      
-      currentCandle = {
-        ...currentCandle,
-        high: Math.max(currentCandle.high, newClose),
-        low: Math.min(currentCandle.low, newClose),
-        close: newClose,
-      };
-
-      seriesRef.current?.update(currentCandle);
-      if (onPriceUpdate) {
-        onPriceUpdate(newClose);
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [candles, onPriceUpdate]);
+      high: Math.max(last.high, newPrice),
+      low: Math.min(last.low, newPrice),
+      close: newPrice,
+    });
+  }, [tickerData?.price, candles]);
 
   return (
     <div className="flex-1 flex flex-col bg-[#0d0e12] border border-zinc-800 rounded-lg overflow-hidden relative">
